@@ -1,6 +1,6 @@
 # Agentic RAG：项目介绍与本机启动
 
-这是一个 Java 知识问答项目，提供固定 RAG 工作流和 AgentScope ReAct 两条入口。RAG 负责问题改写、意图解析、检索、重排及生成；外层 Agent 调用知识工具、MCP 业务工具和 Skills，并管理多轮对话与工具确认。
+这是一个 Java 知识问答项目，提供固定 RAG 工作流和 AgentScope ReAct 两条入口。RAG 负责问题改写、意图解析、检索、重排及生成；外层 Agent 根据问题和工具反馈选择直接回答、澄清、调用知识工具、MCP 业务工具或 Skills，并管理多轮对话与工具确认。当前知识工具内部仍主要采用预先编排的 RAG 流程，外层 Agent 的证据补查与失败恢复效果还需要专项验证。
 
 - 普通 RAG：`/api/ragent/rag/v3/chat`。
 - Agent：`/api/ragent/agent/v1/chat`。
@@ -16,24 +16,28 @@
 | --- | --- | --- |
 | Redis | Windows 服务 `Redis` | `127.0.0.1:6379` |
 | PostgreSQL/pgvector | Docker `ragent-pg` | `127.0.0.1:5433`，容器内 `5432` |
+| Elasticsearch / IK | Docker `elasticsearch`，ES 与 IK 均为 `8.17.0` | `http://127.0.0.1:9200` |
 | MinIO | Docker `ragent-minio` | 文件接口 `9000`，管理界面 `9001` |
 | RocketMQ NameServer | Docker `rmqnamesrv` | `9876` |
 | RocketMQ Broker | Docker `rmqbroker` | `10911` 等 |
 | RocketMQ 控制台 | Docker `rocketmq-dashboard` | `8082`，与 Broker 共享网络 |
+| Langfuse | Docker Compose `langfuse-stack`，6 个容器 | `http://localhost:3000` |
 | MCP 后端 | IDE `McpServerApplication` | `http://localhost:9099` |
 | 主后端 | IDE `RagentApplication` | `http://localhost:9090/api/ragent` |
 | 前端 | `frontend` 中运行 Vite | `http://127.0.0.1:5173` |
 
-**MQ 要启动。ES 和 Milvus 当前不用启动**：现有配置使用 pgvector，关键词后端为 `none`。MQ 不仅用于上传文档，当前主应用启动时也会连接消息消费者。
+**MQ 与 ES 要启动，Milvus 当前不用启动**：向量存储使用 pgvector；本地主配置已开启 ES 关键词通道，重启主应用后与向量通道共同召回。MQ 不仅用于上传文档，当前主应用启动时也会连接消息消费者。
 
 ## 每次怎么启动
+
+**每天按这个顺序启动：基础容器 → 本地 Redis → Langfuse → MCP 后端 → 主后端 → 前端。** 当前 `agent.trace.enabled=true`，Langfuse 也要作为日常启动步骤检查；开关为 `true` 不代表它的容器已启动。
 
 ### 1. 打开 Docker Desktop，启动已有容器
 
 在 Docker Desktop 点击已有容器的启动按钮，或者在 PowerShell 执行：
 
 ```powershell
-docker start ragent-pg ragent-minio rmqnamesrv
+docker start ragent-pg ragent-minio rmqnamesrv elasticsearch
 docker ps
 ```
 
@@ -44,6 +48,9 @@ docker start rmqbroker rocketmq-dashboard
 ```
 
 直接启动已有容器，保留原来的数据库和文件，不重新创建。
+
+
+实际导入 **70 篇文档、210 个切片**，索引计数为 **210**，Embedding 调用数 **0**。ES 只存切片文本、知识库集合、文档 ID 和切片序号；原文件继续在 MinIO，向量继续在 pgvector。回填按原切片 ID 幂等写入，可重跑以补齐/更新有效切片，不负责清理历史多余记录。结果摘要在 `tmp/es-keyword-configure.json` 和 `tmp/es-keyword-backfill.json`，不含密钥或文档正文。
 
 ### 2. 确认本地 Redis 正在运行
 
@@ -57,7 +64,34 @@ Get-Service Redis
 Start-Service Redis
 ```
 
-### 3. 在 IDE 启动两个后端
+### 3. 启动 Langfuse，再启动后端
+
+Langfuse 负责记录模型调用、工具执行、耗时和 Token。它使用独立的服务地址，与模型 API 地址分别配置。
+
+从项目根目录执行；已有容器运行时可以再次执行此命令：
+
+```powershell
+docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml up -d
+docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml ps
+```
+
+这份编排启动 6 个容器，对宿主机发布 `3000`。PostgreSQL、Redis、ClickHouse、MinIO 应显示 `healthy`，Web 和 Worker 应正常运行。需要排查 Web 启动状态时执行：
+
+```powershell
+docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml logs --tail 80 langfuse-web
+```
+
+打开 `http://localhost:3000`。本项目 Compose 首次启动预建账号 `admin@ragent.dev`、密码 `admintrace`、项目 `ragent-service`。
+
+本地配置 `bootstrap/src/main/resources/application.yaml` 的 `agent.trace.enabled` 已设为 `true`。Trace endpoint 为 `http://localhost:3000/api/public/otel/v1/traces`，public-key/secret-key 对应该 Compose 的预置项目密钥。`capture-content=true` 时记录提示词和工具出入参，设为 `false` 时保留运行结构、耗时和 Token 等信息。
+
+Langfuse 启动后，再按下一步启动主后端。若主后端已运行，先确认它实际加载了当前 Trace 配置；修改开关、地址或密钥后需要重启。通过 Agent 入口发起新对话，在 Langfuse 的 Tracing 页面查看新记录；之前没有采集的对话不会因为启动 Langfuse 自动补录。
+
+ES 客户端显式复用 Spring 中的 `OpenTelemetry` 实例，使项目追踪 SDK 先于 ES transport 初始化；没有追踪实例时使用 `NoopInstrumentation`，不读取全局追踪实例。若旧代码启动时报 `GlobalOpenTelemetry 已被占用`，已确认 ES 8.17 默认 instrumentation 会提前读取全局实例并初始化为空实现，随后阻止 Langfuse SDK 注册。更新源码、重新加载 Maven 并重启，保留 `agent.trace.enabled=true`；不通过清空全局实例或关闭 Langfuse 绕过该冲突。
+
+Langfuse 自带专用 Redis 和数据库，本项目业务 Redis 仍使用 Windows 服务。2026-10-11 只读核对时，6 个容器均在运行，4 个基础服务为 `healthy`；该快照不代表后续每次启动都已就绪。详细说明见 [Langfuse 本机部署](resources/docker/langfuse/README.md)。
+
+### 4. 在 IDE 启动两个后端
 
 项目已经有这两份运行配置，按顺序启动：
 
@@ -83,7 +117,7 @@ Copy-Item bootstrap/src/main/resources/application.example.yaml bootstrap/src/ma
 
 当前主配置已设为 `ragent.engine.type=agent`、`ragent.eval.enabled=true`。启动后确认日志没有数据库、MQ、模型或 MCP 连接错误。
 
-### 4. 启动前端
+### 5. 启动前端
 
 从项目根目录进入前端，执行：
 
@@ -93,29 +127,6 @@ npm run dev
 ```
 
 浏览器打开 `http://127.0.0.1:5173`，用本地已有账号登录。
-
-### 5. 启动 Langfuse 查看 Agent Trace
-
-Langfuse 负责记录模型调用、工具执行、耗时和 Token，不提供聊天或 Embedding 模型 API。它与 OhMyGPT 等模型中转站分别配置。
-
-从项目根目录执行：
-
-```powershell
-docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml up -d
-docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml ps
-```
-
-这份编排启动 6 个容器，只对宿主机发布 `3000`。PostgreSQL、Redis、ClickHouse、MinIO 应显示 `healthy`，Web 和 Worker 应正常运行。查看 Web 是否就绪：
-
-```powershell
-docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml logs --tail 80 langfuse-web
-```
-
-打开 `http://localhost:3000`。本项目 Compose 首次启动预建账号 `admin@ragent.dev`、密码 `admintrace`、项目 `ragent-service`。
-
-随后在现有 `agent.trace` 配置中将 `enabled` 改为 `true`，重启 `RagentApplication`。当前 endpoint 为 `http://localhost:3000/api/public/otel/v1/traces`，public-key/secret-key 对应该 Compose 的预置项目密钥。`capture-content=true` 时记录提示词和工具出入参，设为 `false` 时保留运行结构、耗时和 Token 等信息。
-
-通过 Agent 入口提问后，在 Langfuse 的 Tracing 页面观察新记录。它自带专用 Redis 和数据库；本项目业务 Redis 仍使用 Windows 服务。2026-10-10 已确认这 6 个容器正常运行，本地 `agent.trace.enabled` 已设为 `true` 并同步到编译输出；配置变更须重启主后端，之后的新对话才会产生记录。详细说明见 [Langfuse 本机部署](resources/docker/langfuse/README.md)。
 
 ## 当前数据情况与后续顺序
 
@@ -136,11 +147,33 @@ docker compose -f resources/docker/langfuse/langfuse-stack-v4.compose.yaml logs 
 
 测试项目已移到 [ragenteval-main](ragenteval-main/README.md)。固定RAG与Agent同题集为180条；当前Agent场景已更新为40场景、48轮，其中34个自然场景可录制、6个受控恢复场景默认跳过。旧24场景和已完成的历史记录保留。场景内容见 [Agent场景阅读版](ragenteval-main/docs/agent-scenarios-v3.md)。
 
-2026-10-10 已完成 180 条固定 RAG 和 24 个 Agentic 场景的全量测试，结果见本文末尾。下一步审核答案与金标准，再针对跨文档证据覆盖、知识工具耗时和确认流程演进项目。
+2026-10-10 已完成 180 条固定 RAG 和旧版 24 个 Agentic 场景的全量测试，结果见下文。后续重点是验证外层 Agent 的补查作用、缩短澄清与知识工具耗时，以及补齐后台售后审核，具体范围见“当前问题与后续演进”。
 
 项目细节见 [系统设计](docs/Agentic-RAG设计架构.md)；原上游介绍保留在 [docs/README-upstream.md](docs/README-upstream.md)。
 
 ## 全量测试命令与本次结果
+
+### 只测高难度 Agent 场景并保存过程
+
+当前新增一套独立的 **8 场景、22 轮** 小测试集，不替换原 180 条或 40 场景。覆盖赠品/发票退货、保护壳需求续接与机型纠正、二手保修、迁移条件变化、HomePod 联动、及时澄清和未知统计的合理停止。题目及逐轮判据见 [难题阅读版](ragenteval-main/docs/agent-hard-cases.md)，数据文件见 [agentic_hard_v1.jsonl](ragenteval-main/eval/agent/dataset/agentic_hard_v1.jsonl)。
+
+主后端、MCP、模型与演示数据可用后，从根目录执行：
+
+```powershell
+Push-Location ragenteval-main
+$env:PYTHONUTF8 = '1'
+python -m eval v2 preflight --mode agent
+python -m eval v2 run --mode agent --suite hard
+Pop-Location
+```
+
+仅试第一个场景可在 run 命令末尾加 `--limit 1`。每个场景新建会话，场景内复用会话。题目都只咨询，遇到意外操作确认会自动拒绝并结束该场景；工具预算用于评测判定，不是服务端运行时拦截。
+
+结果在 `ragenteval-main/eval/runs/v2_agent_hard_<时间>/`：`cases.jsonl` 保存题目与来源，`records.jsonl` 保存已录制轮次；`traces/HARD-01.md` 等文件可直接阅读每轮输入、已返回的 reasoning、工具事件与结果、完整回答、调用次数和耗时；`traces/*.events.jsonl` 在请求进行中逐事件写入，中断后仍保留已观察部分。
+
+这是完整的**可见事件过程**，不是隐藏模型状态。当前普通工具参数未通过 SSE 返回，报告会标记不可见；完整工具入参及 RAG 内部节点需结合 [Langfuse](http://localhost:3000) 的相应时间和会话 Trace。参数或首次缺项不可见时，不能宣称已验证主动补查。运行记录可能含测试账号数据，运行目录被 Git 忽略。
+
+本次已生成测试集并做离线验证，尚未运行这 8 场景的在线测试。以下保留历史全量测试命令和结果。
 
 题目和实际导入内容先看 [数据集阅读版](docs/evaluation-dataset-v2.md)。测试运行器从 `.env` 读取地址和账号；需要主后端、MCP、模型服务和已有演示数据可用，测试不依赖前端启动。
 
@@ -152,19 +185,8 @@ python -m pip install requests python-dotenv
 Pop-Location
 ```
 
-从本项目根目录运行。本轮实际执行两个预检和两个全量录制命令，测试串行完成：
 
-```powershell
-Push-Location ragenteval-main
-$env:PYTHONUTF8 = '1'
-python -m eval v2 preflight --mode rag
-python -m eval v2 preflight --mode agent
-python -m eval v2 run --mode rag --suite rag
-python -m eval v2 run --mode agent --suite agentic
-Pop-Location
-```
-
-第一组 180 条固定 RAG，第二组 24 个 Agentic 场景、30 轮。确认场景自动拒绝并清理，不批准取消订单或售后写入。未执行外层 Agent 对同一批 180 条的第三组对照。
+历史运行第一组为 180 条固定 RAG，第二组为旧版 24 个 Agentic 场景、30 轮。当前 Agentic 默认题集有 40 场景、48 轮，其中录制 34 个自然场景、42 轮，跳过 6 个尚无注入器的受控场景。确认场景自动拒绝并清理，不批准取消订单或售后写入
 
 ### 2026-10-10 全量结果
 
@@ -177,59 +199,13 @@ Pop-Location
 | Agentic 执行 | 24 场景 / 30 轮；27 轮正常结束、3 轮等待系统确认 |
 | Agentic 自动过程约束 | 23 场景可判定且通过；AG-22 改地址的系统确认约束待复核 |
 | Agentic 首字耗时 | P50 8.678 秒；P95 38.043 秒 |
-| 答案质量 | 完整生成质量评分未完成；补跑 RAGAS 正确性保存 6 / 160 条后按用户要求停止，不能报告全量正确率或 Agentic 任务成功率 |
+| 答案与任务完成情况 | 尚未完成全量语义复核，不能报告答案正确率或 Agentic 任务成功率 |
 
 主要发现：跨文档证据覆盖低于单文档；知识与业务组合中的知识工具耗时约 30–45 秒；AG-06 第二轮调用商品查询 10 次，需要工具预算；AG-22 只要求文字确认，尚未观察到系统确认事件。原始记录支持逐条复核，自动过程约束通过不代表答案正确。
 
 本轮题集是来源派生草案，包含标题式问题，不能与旧 20 条结果直接计算提升幅度。检索分数来自独立 `/rag/eval`，不是生成实际使用的证据；两组首字耗时也不是同题集架构对照。
 
 详细分析与简历可用表述：[全量评测分析](docs/evaluation-full-2026-10-10.md)。本机原始报告：[RAG](ragenteval-main/eval/runs/v2_rag_rag_20261010_191926_212903/report.md)、[Agentic](ragenteval-main/eval/runs/v2_agent_agentic_20261010_200758_262563/report.md)，运行目录被 Git 忽略。
-
-### 复用已保存回答补跑 RAGAS
-
-在 `ragenteval-main/.env` 填评分 Key、Base URL、Judge 和评分 Embedding。`AIHUBMIX_` 是旧变量名，实际调用你填写的服务。OhMyGPT 本机地址为 `https://apic1.ohmycdn.com/v1`，不要加 `/chat/completions`；后台会追加具体接口路径。评分需要该站可用的聊天和 Embedding 模型。
-
-本轮重试命令从项目根目录执行：
-
-```powershell
-Push-Location ragenteval-main
-$env:PYTHONUTF8 = '1'
-.\.venv-ragas\Scripts\python.exe -m eval.v2.score_answers --run-dir eval/runs/v2_rag_rag_20261010_191926_212903 --output-dir eval/runs/v2_rag_rag_20261010_191926_212903/answer_correctness_retry_20261010_2
-Pop-Location
-```
-
-入口复用保存的回答，不重新跑 180 条问答或向量化文档。160 条有指定来源的知识题进入 `answer_correctness`，其余 20 条另按行为要求检查；只评答案与参考内容的事实、语义一致性，不评真实证据忠实度或 Agentic 任务成功率。评分逐题保存、支持断点续跑，模型或来源变化会拒绝混用。
-
-独立环境安装和文件说明见 [评分说明](ragenteval-main/README.md#复用保存的回答进行-ragas-评分)。本机最新重试产物：[评分摘要](ragenteval-main/eval/runs/v2_rag_rag_20261010_191926_212903/answer_correctness_retry_20261010_2/summary.json)、[评分报告](ragenteval-main/eval/runs/v2_rag_rag_20261010_191926_212903/answer_correctness_retry_20261010_2/report.md)。**本次补评分已按用户要求停止，完成 6 / 160 条，154 条未完成，不提供新的全量均分。**原始 180 条 RAG 和 24 个 Agentic 场景的录制与检索报告保留。
-
-旧 20 条对照的 RAGAS 口径已离线核实：第一轮全部 20 条均分 0.660，第二轮 18 条均分 0.758；按两轮共同可评分的 18 条重算，均分为 **0.699 → 0.758**。两轮题目、参考答案与目标文档一致；若引用该提升，应注明共同样本数 18，不能与本轮题集混算。
-
-### 待补：验证外层 Agent 对同一批问题的作用
-
-此前 180 条是固定 RAG 基线，24 个 Agentic 场景是另一批问题，不能用两组结果证明外层 Agent 相对固定 RAG 的收益。用户目标是验证 Agent 的作用，需要补跑外层 Agent 对相同 180 条的回答，复用原固定 RAG 记录逐题对照。
-
-2026-10-10 补跑预检发生连接失败，已确认 `http://localhost:9090/api/ragent` 地址正确，但主应用 9090 与 MCP 9099 均未监听；尚未开始这组在线测试。先在 IDE 启动 `McpServerApplication` 和 `RagentApplication`，再从根目录执行：
-
-```powershell
-Push-Location ragenteval-main
-$env:PYTHONUTF8 = '1'
-python -m eval v2 preflight --mode agent
-python -m eval v2 run --mode agent --suite rag
-Pop-Location
-```
-
-这个入口不重新跑固定 RAG，也不执行 RAGAS。新结果写到 `eval/runs/v2_agent_rag_<时间>/`，保存题目快照、最终回答、实际工具事件、工具结果及耗时。与原基线 `v2_rag_rag_20261010_191926_212903` 按 case_id 对照：
-
-| 检查 | 判定重点 |
-| --- | --- |
-| 22 条跨文档问题 | 对照参考原文审核各子问题是否答全；首次返回不足时，有没有针对缺项再次查询 |
-| 8 条知识不足问题 | 是否承认资料缺失、控制补查次数，而不是补写无依据事实 |
-| 8 条范围外、4 条闲聊/文字任务 | 是否选择合适路线，避免无意义检索 |
-| 138 条单文档问题 | 是否保持答案正确和覆盖，避免为了 Agent 化增加无收益的调用 |
-| 过程与性能 | 实际知识/业务工具调用、失败与后续动作、完整答案耗时；首字可能只是开场白 |
-
-自动报告的过程约束通过不等于语义成功。多次查询也不能自动当作失败恢复：要检查工具输入输出是否表明针对缺项补查；记录不足时标记无法判定。Agent 入口不借用独立 `/rag/eval` 来冒充实际检索证据。资料快照、人设、模型和长期记忆条件变化须注明，必要时重新建立同条件基线。
-
 
 ### 已先修改 Agent 决策场景
 
@@ -239,14 +215,44 @@ Pop-Location
 
 当前34个自然场景（42轮）可由现有录制器执行；6个受控场景需要工具返回注入器，尚未实现，默认跳过且写入报告，不能当作恢复通过。场景细节与模拟返回规格见 [阅读版](ragenteval-main/docs/agent-scenarios-v3.md)。本次只修改场景与离线保护，47项离线测试通过；没有运行新版在线测试。
 
-后端启动后，从根目录执行新版场景录制，不调用RAGAS：
-
-```powershell
-Push-Location ragenteval-main
-$env:PYTHONUTF8 = '1'
-python -m eval v2 preflight --mode agent
-python -m eval v2 run --mode agent --suite agentic
-Pop-Location
-```
+后端启动后，从根目录执行新版场景录制：
 
 普通180条题集及旧24场景未改写，历史运行目录保留。新版场景结果与原24场景结果应分别报告，不能直接当成同题提升。
+
+## 当前问题与后续演进
+
+以下记录截至 2026-10-11 的已知缺口和后续目标，不代表已经实现或通过验证。
+
+### 1. 补齐后台售后审核
+
+当前已实现用户确认、MCP 售后申请落库和售后进度查询。用户点击确认只是授权 Agent 提交申请，不等于商家审核通过。`apply_after_sale` 向业务库 `ragent_bit.t_after_sale` 写入状态为“待处理”的售后单；当前没有后台售后管理页面、审核通过/驳回接口，也没有寄回、验收、退款等后续状态推进。
+
+工具描述和回执中的“进入人工审核”“审核通过后退款”是预期流程文案，尚未接上实际审核系统；管理看板的“人工确认”统计的是用户工具授权。
+
+后续需要售后列表与详情、管理员审核权限、通过/驳回及原因、审核人和时间记录，并按售后类型推进后续状态。重复审核应避免重复推进；演示退款与真实支付退款需要明确区分。
+
+验收目标：用户提交后，管理员能看到待处理售后单；管理员审核后，用户通过 `query_after_sale` 查到相应状态和结果。审核通过不能直接等同于退款完成。
+
+### 2. 让歧义澄清更早发生
+
+在“这个还能退吗？”的单次对话记录中，Agent 第一轮已发现商品不明确，但先查询订单和知识库，再询问用户是哪一件；知识工具耗时约 30 秒，最终澄清回复约 40 秒才出现。这是单次观察，不是全量耗时统计。
+
+后续应先利用已有上下文定位商品；仍不明确时及时澄清，必要时只查询最近订单辅助选择。确认具体商品后，再查询签收时间、激活/使用情况、退货原因和适用规则，区分取消订单、运输中处理与签收后售后。
+
+验收目标：指代不明时不擅自选择订单、不提前提交操作；补充条件后的下一轮能承接原对话，不重复询问已提供的信息。
+
+### 3. 降低知识工具耗时，并改进证据返回
+
+历史知识与业务组合场景中，知识工具曾耗时约 30–45 秒。当前 `KnowledgeSearchFacade` 会在检索后先调用 LLM 合成答案，再交给外层 Agent 继续回答，存在两层生成的耗时；具体瓶颈仍需按 Trace 分解。
+
+后续分别记录问题改写、意图识别、检索、重排、内部生成和外层生成的耗时，并评估让知识工具返回带来源的证据片段、覆盖情况和缺失项，由外层 Agent 组织最终回答。性能优化应同时检查答案覆盖和依据，不能只缩短首字时间。
+
+验收目标：外层 Agent 能看到每个子问题已有和缺失的证据；报告完整回答耗时及工具耗时，首字指标注明是否仅为开场白。
+
+### 4. 完善过程记录和工具预算
+
+历史 AG-06 第二轮曾调用商品查询 10 次；AG-22 改地址只观察到文字确认，未观察到系统确认事件，需要检查当时工具选择与配置。新版评测已增加总工具调用预算，但评测约束不等于运行时已有相同限制。
+
+后续补充可复核的工具输入、输出、调用 ID、失败原因和后续动作；针对重复参数、没有新增信息的查询设置运行时停止规则，并核对写操作是否触发真实确认卡片。记录不足的场景应标记无法判定。
+
+验收目标：能解释每次补查针对什么缺项；无进展时不会持续重复调用；用户拒绝后不执行原写操作。

@@ -9,6 +9,13 @@ from evaluate import collect_stream, record_case, retrieval_metrics, sse_events,
 
 
 class EvaluationTests(unittest.TestCase):
+    def test_product_budget_is_separate_from_knowledge_and_total_budget(self):
+        case = {'checks': {'max_product_calls': 3, 'max_total_calls': 5}}
+        tools = [{'name': 'search_product', 'toolCallId': str(i), 'status': 'done'} for i in range(4)]
+        checks = structural_checks(case, [{'status': 'success', 'tools': tools}])
+        self.assertFalse(checks['product_budget_respected'])
+        self.assertTrue(checks['total_tool_budget_respected'])
+
     def test_controlled_case_cannot_bypass_the_cli_skip_guard(self):
         client = Mock()
         case = {"case_id": "controlled", "execution": {"kind": "controlled", "ready": False}}

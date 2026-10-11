@@ -18,6 +18,7 @@
 package com.nageoffer.ai.ragent.rag.config;
 
 import lombok.Data;
+import lombok.ToString;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -58,6 +59,11 @@ public class KeywordProperties {
          * ES 连接地址
          */
         private String uris = "http://127.0.0.1:9200";
+
+        private String username;
+
+        @ToString.Exclude
+        private String password;
 
         /**
          * 共享索引名称：所有知识库的关键词数据都写在此索引，按 collection_name 字段过滤

@@ -39,10 +39,20 @@
             <artifactId>milvus-sdk-java</artifactId>
         </dependency>
 
-        <!-- 关键词检索（可选）：仅 rag.keyword.type=es 时使用，版本由 Spring Boot BOM 管理 -->
+        <!-- ES 客户端版本在根 POM 统一管理。 -->
         <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.elasticsearch.client</groupId>
+            <artifactId>elasticsearch-rest-client</artifactId>
+        </dependency>
+
+        <!-- ES 显式复用项目追踪实例，API 版本由根 POM 的 OTel BOM 管理。 -->
+        <dependency>
+            <groupId>io.opentelemetry</groupId>
+            <artifactId>opentelemetry-api</artifactId>
         </dependency>
 
         <!-- 解析 PDF / DOC / DOCX / Markdown 等 -->

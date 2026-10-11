@@ -6,6 +6,8 @@
   "agentic_scenarios": 40,
   "agentic_turns": 48,
   "agentic_version": "v3-draft",
+  "hard_scenarios": 8,
+  "hard_turns": 22,
   "agentic_live_scenarios": 34,
   "agentic_controlled_scenarios": 6,
   "agentic_live_turns": 42,

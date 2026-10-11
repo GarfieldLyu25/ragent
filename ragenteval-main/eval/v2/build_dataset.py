@@ -151,11 +151,16 @@ def build() -> dict[str, Any]:
             assert item["excerpt"] in (ROOT / item["path"]).read_text(encoding="utf-8")
     write_jsonl(rag_path, cases)
     write_jsonl(agent_path, scenarios)
+    from eval.v2.hard_scenarios import build_hard_scenarios, write_hard_guide
+    hard = build_hard_scenarios(ROOT)
+    write_jsonl(output / 'agent/dataset/agentic_hard_v1.jsonl', hard)
+    write_hard_guide(output.parent / 'docs/agent-hard-cases.md', hard)
     manifest = {"version": "v2-draft", "corpus": "bit-selection-69-local-snapshot",
                 "origin": "source-derived synthetic questions; no real user logs; no external benchmark",
                 "rag_cases": len(cases), "agentic_scenarios": len(scenarios),
                 "agentic_turns": sum(len(case["turns"]) for case in scenarios),
                 "agentic_version": "v3-draft",
+                "hard_scenarios": len(hard), "hard_turns": sum(len(case['turns']) for case in hard),
                 "agentic_live_scenarios": sum(case["execution"]["kind"] == "live" for case in scenarios),
                 "agentic_controlled_scenarios": sum(case["execution"]["kind"] == "controlled" for case in scenarios),
                 "agentic_live_turns": sum(len(case["turns"]) for case in scenarios if case["execution"]["kind"] == "live"),

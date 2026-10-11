@@ -19,16 +19,25 @@ package com.nageoffer.ai.ragent.rag.config;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
-import co.elastic.clients.transport.rest5_client.Rest5ClientTransport;
-import co.elastic.clients.transport.rest5_client.low_level.Rest5Client;
+import co.elastic.clients.transport.instrumentation.Instrumentation;
+import co.elastic.clients.transport.instrumentation.NoopInstrumentation;
+import co.elastic.clients.transport.instrumentation.OpenTelemetryForElasticsearch;
+import co.elastic.clients.transport.rest_client.RestClientTransport;
+import io.opentelemetry.api.OpenTelemetry;
+import org.apache.http.HttpHost;
+import org.apache.http.auth.AuthScope;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.StringUtils;
 
-import java.net.URI;
 import java.util.Arrays;
 
 /**
@@ -40,18 +49,41 @@ import java.util.Arrays;
 @ConditionalOnProperty(name = "rag.keyword.type", havingValue = "es")
 public class EsClientConfig {
 
-    @Bean
-    public ElasticsearchClient elasticsearchClient(KeywordProperties keywordProperties) {
+    @Bean(destroyMethod = "close")
+    public RestClient keywordRestClient(KeywordProperties keywordProperties) {
         String uris = keywordProperties.getEs().getUris();
-        URI[] hosts = Arrays.stream(StringUtils.commaDelimitedListToStringArray(uris))
+        HttpHost[] hosts = Arrays.stream(StringUtils.commaDelimitedListToStringArray(uris))
                 .map(String::trim)
                 .filter(StringUtils::hasText)
-                .map(URI::create)
-                .toArray(URI[]::new);
+                .map(HttpHost::create)
+                .toArray(HttpHost[]::new);
 
-        Rest5Client restClient = Rest5Client.builder(hosts).build();
-        Rest5ClientTransport transport = new Rest5ClientTransport(restClient, new JacksonJsonpMapper());
+        String username = keywordProperties.getEs().getUsername();
+        String password = keywordProperties.getEs().getPassword();
+        if (StringUtils.hasText(username) != StringUtils.hasText(password)) {
+            throw new IllegalArgumentException("ES username 和 password 需要同时配置");
+        }
+        RestClientBuilder builder = RestClient.builder(hosts);
+        if (StringUtils.hasText(username)) {
+            BasicCredentialsProvider credentials = new BasicCredentialsProvider();
+            credentials.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(username, password));
+            builder.setHttpClientConfigCallback(client -> client.setDefaultCredentialsProvider(credentials));
+        }
         log.info("Elasticsearch 关键词检索客户端已初始化, uris={}", uris);
+        return builder.build();
+    }
+
+    @Bean
+    public ElasticsearchClient elasticsearchClient(RestClient keywordRestClient,
+                                                  ObjectProvider<OpenTelemetry> openTelemetryProvider) {
+        // 先解析项目 SDK，避免 ES 默认 instrumentation 提前读取 GlobalOpenTelemetry，
+        // 将全局实例锁定为 no-op，阻止随后注册 Langfuse SDK。关闭追踪时也不读取全局实例。
+        OpenTelemetry openTelemetry = openTelemetryProvider.getIfAvailable();
+        Instrumentation instrumentation = openTelemetry == null
+                ? NoopInstrumentation.INSTANCE
+                : new OpenTelemetryForElasticsearch(openTelemetry, false);
+        RestClientTransport transport = new RestClientTransport(keywordRestClient, new JacksonJsonpMapper(),
+                null, instrumentation);
         return new ElasticsearchClient(transport);
     }
 }

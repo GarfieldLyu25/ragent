@@ -10,6 +10,7 @@ Ragent 的本地启动方法见 [主项目 README](../README.md)：本地 Redis�
 | --- | ---: | --- |
 | [eval/rag/dataset/eval_set_v2.jsonl](eval/rag/dataset/eval_set_v2.jsonl) | 180 条单轮题 | RAG 与 Agent 回答同一批问题 |
 | [eval/agent/dataset/agentic_set_v3.jsonl](eval/agent/dataset/agentic_set_v3.jsonl) | 40 场景、48 轮 | 当前：34 自然场景可录制，6 受控恢复场景暂跳过 |
+| [eval/agent/dataset/agentic_hard_v1.jsonl](eval/agent/dataset/agentic_hard_v1.jsonl) | 8 场景、22 轮 | 独立难题集：条件续接/纠正、跨文档覆盖、澄清与停止 |
 | [eval/agent/dataset/agentic_set_v2.jsonl](eval/agent/dataset/agentic_set_v2.jsonl) | 24 场景、30 轮 | 历史已测试版本，保留供复核 |
 | [eval/dataset_manifest_v2.json](eval/dataset_manifest_v2.json) | 69 个来源文档 | 路径、SHA-256 和类别统计 |
 
@@ -32,6 +33,18 @@ RAG 题集标记为 **`v2-draft`**，当前 Agent 场景标记为 **`v3-draft`**
 2026-10-10 已导入并核对业务数据：商品 695、SKU 1,420、订单 8、优惠券 7。4 个演示知识库、意图、Skills、人设和示例问题也已创建。69 篇演示文档均已成功处理，生成 208 个切片和 208 条 1536 维向量。另有个人 PDF 已成功生成 2 个切片，当前预检报告 70 篇可用文档，数据库共 210 条向量。日常运行评测无需重复导入。
 
 ## 怎么运行
+
+只跑少量难题，先看 [8 场景全文与逐轮判据](docs/agent-hard-cases.md)。后端、MCP 和模型在线后，在本目录执行：
+
+```powershell
+$env:PYTHONUTF8 = '1'
+python -m eval v2 preflight --mode agent
+python -m eval v2 run --mode agent --suite hard
+```
+
+加 `--limit 1` 可先试第一场景。每个场景新建会话、场景内连续发送。结果在 `eval/runs/v2_agent_hard_<时间>/`，优先打开 `traces/HARD-01.md` 等过程阅读版；对应 `*.events.jsonl` 请求中逐事件落盘，保留事件顺序、接收时间、批次、工具状态和结果。
+
+普通工具参数当前未在 SSE 返回，报告会显式标记不可见；需要结合 Langfuse 核对工具入参和 RAG 内部节点。reasoning 只保存服务已返回的 `think` 内容。并行拆分查询不等于缺项反馈补查，自动约束通过也不等于任务成功。该难题集尚未在线运行。
 
 以下命令在 **`ragenteval-main` 目录**执行。从主项目根目录先进入：
 

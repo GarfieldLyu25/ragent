@@ -90,10 +90,12 @@ rag:
     type: pg  # 可选 milvus / pg
 
   keyword:
-    type: none  # 可选 none / es
+    type: es  # 本机使用 Elasticsearch 8.17 + IK；没有 ES 时改为 none
     es:
       uris: http://127.0.0.1:9200
-      index: rag_keyword_store  # 全库共享索引，按 collection_name 字段区分知识库
+      username: ${RAG_ES_USERNAME:} # 本机 ES 未开启认证，留空
+      password: ${RAG_ES_PASSWORD:}
+      index: ragent_keyword_store  # 本项目独立索引，按 collection_name 区分知识库
       analyzer: ik_max_word
       search-analyzer: ik_smart
 
@@ -163,7 +165,7 @@ rag:
       vector:
         enabled: true       # 向量通道总开关
       keyword:
-        enabled: false      # 检索范围读引擎解析好的作用域，与向量通道同源
+        enabled: true       # 与向量通道共同召回；需要已配置 ES 且完成切片回填
       graph:
         enabled: false    # 图谱检索通道开关：false 不参与问答召回（后端仍在，后台可视化照常）；置 true 前需先开 rag.graph.type=lightrag
       web-search:
