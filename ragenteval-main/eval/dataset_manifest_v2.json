@@ -1,0 +1,379 @@
+{
+  "version": "v2-draft",
+  "corpus": "bit-selection-69-local-snapshot",
+  "origin": "source-derived synthetic questions; no real user logs; no external benchmark",
+  "rag_cases": 180,
+  "agentic_scenarios": 40,
+  "agentic_turns": 48,
+  "agentic_version": "v3-draft",
+  "agentic_live_scenarios": 34,
+  "agentic_controlled_scenarios": 6,
+  "agentic_live_turns": 42,
+  "rag_categories": {
+    "faq": 8,
+    "manual": 22,
+    "policy": 32,
+    "product": 76,
+    "cross_document": 22,
+    "unanswerable": 8,
+    "out_of_scope": 8,
+    "chat": 4
+  },
+  "agentic_categories": {
+    "routing": 4,
+    "clarification": 4,
+    "evidence_coverage": 8,
+    "feedback_recovery": 6,
+    "continuity": 4,
+    "knowledge_and_business": 4,
+    "confirmation": 6,
+    "stopping": 4
+  },
+  "documents": [
+    {
+      "doc_id": "常见错误提示与处理",
+      "path": "resources/initializer/bit-selection/docs/knowledge/faq/error-code/常见错误提示与处理.md",
+      "sha256": "241384e10e6cf0467d6fd6ce554ae53eab349380bc13d293ab1a35ca13e576d8"
+    },
+    {
+      "doc_id": "AirPods与AppleWatch常见故障排查",
+      "path": "resources/initializer/bit-selection/docs/knowledge/faq/trouble/AirPods与AppleWatch常见故障排查.md",
+      "sha256": "d7a50883b2bf2f1c98354160bbae8a504557cb2d44dbcd5c821462760da47dc1"
+    },
+    {
+      "doc_id": "iPhone常见故障排查",
+      "path": "resources/initializer/bit-selection/docs/knowledge/faq/trouble/iPhone常见故障排查.md",
+      "sha256": "e4062cfc7cb77aa6a50cd4860b687fa31eecdd2c87a431434aacf43d9891e817"
+    },
+    {
+      "doc_id": "Mac常见故障排查",
+      "path": "resources/initializer/bit-selection/docs/knowledge/faq/trouble/Mac常见故障排查.md",
+      "sha256": "42d74dd339f9733ed0534be54fcc5800a201a1e9d4073ab1fd71f9cf2e178632"
+    },
+    {
+      "doc_id": "Apple账户与iCloud基础",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/app/Apple账户与iCloud基础.md",
+      "sha256": "7c97c307b035ca3ff69e7db8b664f43eead8a699b804a705a00ab4b31a685662"
+    },
+    {
+      "doc_id": "比特严选App使用指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/app/比特严选App使用指南.md",
+      "sha256": "c3a097944457a6de8d3d5305729e76471455ea5cddbe235da9438f68c747661f"
+    },
+    {
+      "doc_id": "设备联动",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/network/设备联动.md",
+      "sha256": "7740ae70ca4e3baf628b0da69344808b07b2e4f001c949112f61db91ed3790e5"
+    },
+    {
+      "doc_id": "连接WiFi与网络异常排查",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/network/连接WiFi与网络异常排查.md",
+      "sha256": "a8f64c526d0eec5428fb0f63699c45b1e8c46083c0c4285b70ca2a95c87aad7d"
+    },
+    {
+      "doc_id": "平板用户手册",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/平板用户手册.md",
+      "sha256": "c105afebc415ce952f84afacc8db1324b20d2768c81fa2138431a067b4535c62"
+    },
+    {
+      "doc_id": "手机操作进阶",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/手机操作进阶.md",
+      "sha256": "27c5bce0dc5ad1d97b665035ce9332d1d71260e3d47c7ba18319db7f236a59c4"
+    },
+    {
+      "doc_id": "手机用户手册",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/手机用户手册.md",
+      "sha256": "fd48b6162838ed483ebac02c81a575ff42fd480833e2fa034093a1fff8b96ec9"
+    },
+    {
+      "doc_id": "新设备开机设置与数据迁移",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/新设备开机设置与数据迁移.md",
+      "sha256": "6f254d60cdf5e81a6fc4ecdbffa4014e6af7f0b01794c803b28f6df511889968"
+    },
+    {
+      "doc_id": "日常保养与耗材更换",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/日常保养与耗材更换.md",
+      "sha256": "165291623c3e7a01a9f15d8317d17a5be02bf120c17e516ea17e5f2c87b4653a"
+    },
+    {
+      "doc_id": "系统更新与版本管理",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/系统更新与版本管理.md",
+      "sha256": "6a10e2f04e75d333730591dfd3986d5093cd1298e335a1ebd591f95b4a245c35"
+    },
+    {
+      "doc_id": "耳机用户手册",
+      "path": "resources/initializer/bit-selection/docs/knowledge/manual/product/耳机用户手册.md",
+      "sha256": "772d0331c6f5b636a4a5b834bcacbc1fd85ca1e1c58e1914d7893dfa68fefe55"
+    },
+    {
+      "doc_id": "会员权益体系",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/invoice-vip/会员权益体系.md",
+      "sha256": "8d6e1462d7277668ff57413a622b4af6d4e331c26e25f7ff8bb43a5deec122cd"
+    },
+    {
+      "doc_id": "会员积分规则与到期提醒",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/invoice-vip/会员积分规则与到期提醒.md",
+      "sha256": "13038b242f14bd88a5731d2f3235054f9ea943ea98f2c7a41f6254fc5b5507c9"
+    },
+    {
+      "doc_id": "发票开具规则",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/invoice-vip/发票开具规则.md",
+      "sha256": "4144c51bd5cf5cb97b4b477f637d5a16e685961cde77a0e01e8e6cb3f760c75e"
+    },
+    {
+      "doc_id": "发货时效与配送范围",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/logistics/发货时效与配送范围.md",
+      "sha256": "3e800c232bd53ab4daab7af00d469ba6e2ba2d437ad8ab37afac1a37364e3eca"
+    },
+    {
+      "doc_id": "物流异常处理",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/logistics/物流异常处理.md",
+      "sha256": "aac8fed0118daa0a61e6b27271134f54a33af7e7dec735dcd2cdbe6e3aed8892"
+    },
+    {
+      "doc_id": "配送服务",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/logistics/配送服务.md",
+      "sha256": "7f92f47e803101d3828c8d32c917af128c1292218945c7e6e3b25078c6cdd265"
+    },
+    {
+      "doc_id": "促销活动与优惠券规则",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/promotion/促销活动与优惠券规则.md",
+      "sha256": "494441c02bf7576a072648bfd5067edb7a1214a2e6ad26b2a7628a22df78572e"
+    },
+    {
+      "doc_id": "7天无理由退换政策",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/return/7天无理由退换政策.md",
+      "sha256": "70a0353a3d32f2416fddc787eb18c120f023faae8d2ff99ee3af33162af88e50"
+    },
+    {
+      "doc_id": "价保政策",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/return/价保政策.md",
+      "sha256": "6f93b29f04f980d7f3755d7f347639d9fdfcaae1d0f7442ca25922bd873edfd0"
+    },
+    {
+      "doc_id": "退换货条件",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/return/退换货条件.md",
+      "sha256": "b1974339820a922d277c58c6d5007c7143b16f6eb67b8048acb25d89d6ea90d4"
+    },
+    {
+      "doc_id": "退换货流程与申请方式",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/return/退换货流程与申请方式.md",
+      "sha256": "c563dc2ecd31e1661e96980cdcdefd08aa32dc4c2c2ca04fcadc3a10021fc8b8"
+    },
+    {
+      "doc_id": "保修凭证要求",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/warranty/保修凭证要求.md",
+      "sha256": "3c97000041ad4a1d122bb7bbffbc9be2dff6748cbbb0405901dce62ce1b24103"
+    },
+    {
+      "doc_id": "保修政策总则",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/warranty/保修政策总则.md",
+      "sha256": "e68e409ebe7f5377bc31cc32be66dd88f9237b16e74ceacb000ae124fbdfb980"
+    },
+    {
+      "doc_id": "各品类保修期与保修范围",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/warranty/各品类保修期与保修范围.md",
+      "sha256": "54f07f99e6a5c53d0b7f67bc39bc4ef07420709e014417918aeef8a2a4afae22"
+    },
+    {
+      "doc_id": "维修服务报价表",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/warranty/维修服务报价表.md",
+      "sha256": "cba0ff83e64f4758cd0a0753158d7fb936defb231ee8bceedade942fe472be1a"
+    },
+    {
+      "doc_id": "过保维修政策与流程",
+      "path": "resources/initializer/bit-selection/docs/knowledge/policy/warranty/过保维修政策与流程.md",
+      "sha256": "2009f877d7cca5e897b7c1a2b6fdccd9b211d5db6efaee078e4415eecb8e2df1"
+    },
+    {
+      "doc_id": "AIRPODS-5",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/AIRPODS-5.md",
+      "sha256": "197dce7cd838bf4b7baebca70c80b830fa079ee62a40b0b16f02c5996d420d4f"
+    },
+    {
+      "doc_id": "AIRPODS-MAX-2",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/AIRPODS-MAX-2.md",
+      "sha256": "d8461b398f9ddb2a3491375eabe54fe7019e6254051a515c4839fadf488defc7"
+    },
+    {
+      "doc_id": "AIRPODS-PRO-3",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/AIRPODS-PRO-3.md",
+      "sha256": "3dffc061fe73dd8aa122c920827e3ce371df73eb0b79570ce685c6cc5f638fba"
+    },
+    {
+      "doc_id": "AIRTAG",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/AIRTAG.md",
+      "sha256": "071ee5c314559bb669c14b1ce13a8020d45277d4ef8a5b90040ade461f0c85ca"
+    },
+    {
+      "doc_id": "HOMEPOD-MINI",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/HOMEPOD-MINI.md",
+      "sha256": "36ae805e23c856fff127692e84928ddc2e6716ab2c62660bb9d62c282be84003"
+    },
+    {
+      "doc_id": "HOMEPOD",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/HOMEPOD.md",
+      "sha256": "9898eebec7dd5257e4f5f3cb9e3bc8640cdbea215ef3929119ca78c04c5185ef"
+    },
+    {
+      "doc_id": "IMAC",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IMAC.md",
+      "sha256": "75b5c11552412325868a16b4fa09e30604d4956de86f713f1ce730f370fe524e"
+    },
+    {
+      "doc_id": "IPAD-11",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPAD-11.md",
+      "sha256": "01699fc90a828b46a1ce29be2fd323bc34ed0d8e861b287e94e3dbcde20922ea"
+    },
+    {
+      "doc_id": "IPAD-AIR-11",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPAD-AIR-11.md",
+      "sha256": "547f54e8b49d094fe85ca8316cb752737135116c5acef15f3b27685c4c15dfcc"
+    },
+    {
+      "doc_id": "IPAD-AIR-13",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPAD-AIR-13.md",
+      "sha256": "ae505e685c59efc72390dfe2e7bb1c36ec8cd8e4a2c51f85ad27a3f23806b0ef"
+    },
+    {
+      "doc_id": "IPAD-MINI",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPAD-MINI.md",
+      "sha256": "a66cecd66bfaa1d369c40a1281e81d10c2eff4b58a6c289374d1c299b7ad1f87"
+    },
+    {
+      "doc_id": "IPAD-PRO-11",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPAD-PRO-11.md",
+      "sha256": "1f4b04988ea5332c268b79e8bf701b062dd0410f1a929ac4063aa6eb2a9d0bd5"
+    },
+    {
+      "doc_id": "IPAD-PRO-13",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPAD-PRO-13.md",
+      "sha256": "ab91d2ea8dca2ffe414db3469e8777a6ce5080d78ffd5921ef6a094338f120eb"
+    },
+    {
+      "doc_id": "IPHONE-16",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-16.md",
+      "sha256": "587bf8a2722282759e7eb879b10ba79c755f328a2b371175198845a37873b866"
+    },
+    {
+      "doc_id": "IPHONE-17",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-17.md",
+      "sha256": "b3261cdf0e7245d4d662f17f650d288f146d0f0a94e22687d2a8cbe14a11a17d"
+    },
+    {
+      "doc_id": "IPHONE-17E",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-17E.md",
+      "sha256": "7f31513cb4a59309d449b90e40dd93916b6765cbe8f7299c5aabf0848eceaa42"
+    },
+    {
+      "doc_id": "IPHONE-18-PRO-MAX",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-18-PRO-MAX.md",
+      "sha256": "96e14e20024f3f67c80114c56eabb2e388df5c5445407e376d92dddd0225e0be"
+    },
+    {
+      "doc_id": "IPHONE-18-PRO",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-18-PRO.md",
+      "sha256": "f3819121e68abcf1bfd34441c0e3763fc75ea892f333a6a806488fced1cafe45"
+    },
+    {
+      "doc_id": "IPHONE-AIR",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-AIR.md",
+      "sha256": "0a1a1f910323f894063ce9c56a331a048767848faca6db4ebb2d93f512430be8"
+    },
+    {
+      "doc_id": "IPHONE-DUO",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/IPHONE-DUO.md",
+      "sha256": "eed9f0297abecd0782df116b3008b3bd84f5f5b1b3788eb06a1f482284e51b32"
+    },
+    {
+      "doc_id": "MAC-MINI",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/MAC-MINI.md",
+      "sha256": "964b98cf7891025aa17004e32871c161d5dd2dae80bd34fbfa4c387b298d4fd0"
+    },
+    {
+      "doc_id": "MAC-STUDIO",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/MAC-STUDIO.md",
+      "sha256": "408e761eea380c490499f181642595430b4bb4ba9026c77085e4f6805c34e917"
+    },
+    {
+      "doc_id": "MACBOOK-AIR",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/MACBOOK-AIR.md",
+      "sha256": "91ce9272baf091761da326a0ad23fd362606e7f6d14063b5bd51c2b3a68300d0"
+    },
+    {
+      "doc_id": "MACBOOK-NEO",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/MACBOOK-NEO.md",
+      "sha256": "e3550a3485c807339a3f698f1bc515e0485a6c41a9f8dfd6673370db603c30f0"
+    },
+    {
+      "doc_id": "MACBOOK-PRO",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/MACBOOK-PRO.md",
+      "sha256": "45902cb386c13cca01418cbeac84d57f70eb32032cd40faa6bf3eb3f489a3498"
+    },
+    {
+      "doc_id": "STUDIO-DISPLAY-XDR",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/STUDIO-DISPLAY-XDR.md",
+      "sha256": "42b32cb1c0dbd9290caf2807453b4e9d64dbacd3e547964f9c83b4a2879e459e"
+    },
+    {
+      "doc_id": "STUDIO-DISPLAY",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/STUDIO-DISPLAY.md",
+      "sha256": "9e6e602a41098f74de349f90e6863a715846baa7156445d8bee1e101a99e14ea"
+    },
+    {
+      "doc_id": "VISION-PRO",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/VISION-PRO.md",
+      "sha256": "2e1411d1bd2ce6bb58a0bf6d9f8efb398e95d248eac82dfcaeb09f22e6c555e4"
+    },
+    {
+      "doc_id": "WATCH-SE-3",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/WATCH-SE-3.md",
+      "sha256": "a8ff8505eab85f2c48f2daccdd6c7d520c353e7e0f475285d487de0ac5a3f28c"
+    },
+    {
+      "doc_id": "WATCH-SERIES-12",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/WATCH-SERIES-12.md",
+      "sha256": "35e9a6449a25aca925e503ff277d3fcc400597276ddb10a90b426099b073a5da"
+    },
+    {
+      "doc_id": "WATCH-ULTRA-4",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/detail/WATCH-ULTRA-4.md",
+      "sha256": "6b030a428bff3269212cf0304ac876ca77b95c1f8c63b466bb51901eec72cb7a"
+    },
+    {
+      "doc_id": "AirTag配件选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/AirTag配件选购指南.md",
+      "sha256": "f235217dac0f1b9755217ee352de80f58b8692fb3396a99257bb99e7d5a9710e"
+    },
+    {
+      "doc_id": "AppleVisionPro配件选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/AppleVisionPro配件选购指南.md",
+      "sha256": "9cbeb204c7994f34b61b8091210d6332b067b5e6330f6c731d99b57dc8095141"
+    },
+    {
+      "doc_id": "AppleWatch表带选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/AppleWatch表带选购指南.md",
+      "sha256": "c208c652977dd9094593c71d9408c61e4b091809e0df916ba19041b28014e531"
+    },
+    {
+      "doc_id": "iPad配件选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/iPad配件选购指南.md",
+      "sha256": "4ea4bde550e7fcf3e8fefda9915df85c8a9eee94a4e42db62c1dc9f4b2b3c51e"
+    },
+    {
+      "doc_id": "iPhone配件选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/iPhone配件选购指南.md",
+      "sha256": "e7350125f06435e31ac8909da26984db025b1b31321583377ada3e0be284508d"
+    },
+    {
+      "doc_id": "Mac配件选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/Mac配件选购指南.md",
+      "sha256": "da0490e4a7624aeb44b1b5d531e75de1eaec431dc6579e88962ef150db26ea11"
+    },
+    {
+      "doc_id": "通用配件选购指南",
+      "path": "resources/initializer/bit-selection/docs/knowledge/product/guide/通用配件选购指南.md",
+      "sha256": "2888d58fa78e0e2dc699ab1361c1b6170352f2baed6a442122cb378e5d8796d2"
+    }
+  ]
+}

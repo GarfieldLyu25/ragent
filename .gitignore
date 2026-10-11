@@ -1,0 +1,85 @@
+target/
+temp
+.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### STS ###
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
+
+### IntelliJ IDEA ###
+.idea
+!.idea/dictionaries/
+!.idea/inspectionProfiles/
+!.idea/scopes/
+!.idea/icon.png
+*.iws
+*.iml
+*.ipr
+
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+scripts/logs/
+
+### Frontend ###
+node_modules/
+dist/
+.vite/
+.env.local
+/bootstrap/src/main/resources/application.yaml
+resources/docker/graphrag/.env
+
+### Tmp Out ###
+.output/
+docs/temp
+.claude/
+
+### Evaluation recordings ###
+resources/evaluation/runs/
+resources/evaluation/__pycache__/
+/docs
+.env
+
+### Local secrets and environment overrides ###
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+*.p12
+*.pfx
+
+### Local working files and generated output ###
+/tmp/
+/output/
+*.log
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.venv-*/
+venv/
+.DS_Store
+Thumbs.db
+
+# 项目排除路径
+/frontend/vite.config.d.ts
+/frontend/vite.config.js
